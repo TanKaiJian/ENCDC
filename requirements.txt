@@ -1,0 +1,7 @@
+Flask
+pandas
+SQLAlchemy
+psycopg2-binary
+keplergl
+matplotlib
+plotly
