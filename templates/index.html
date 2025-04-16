@@ -2,89 +2,98 @@
 <html>
 <head>
     <title>Health Facilities Map</title>
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: sans-serif;
-            text-align: center;
-            background-color: #f4f4f4;
-            height: 100vh;
-            overflow-x: hidden;
-        }
-        .container {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            width: 100%;
-            padding: 10px;
-            flex-direction: column;
-        }
-        iframe {
-            width: 70vw;
-            height: 70vh;
-            border: none;
-        }
-        .button-container {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-        }
-        .chart-container {
-            width: 70vw;
-            height: 80vh;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            overflow-y: auto;
-            margin-top: 20px;
-        }
-        .btn {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            background-color: #007BFF;
-            color: white;
-            border: 2px solid #0056b3;
-            border-radius: 5px;
-            margin: 0 10px;
-        }
-        .btn:hover {
-            background-color: #0056b3;
-        }
-        #kepler-gl__map {
-            width: 100% !important;
-            height: 100vh !important;
-        }
-    </style>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <div class="container">
-        <iframe id="mapFrame" src="/map"></iframe>
-        
-        <div class="button-container">
+        <h1>Health Facilities in Malaysia</h1>
+
+        <!-- KPI Section -->
+        <div class="kpi-container">
+            <div class="kpi-box">
+                <div class="kpi-title">Total Facilities</div>
+                <div class="kpi-value">{{ total_facilities }}</div>
+            </div>
+            <div class="kpi-box">
+                <div class="kpi-title">Clinics</div>
+                <div class="kpi-value">{{ clinic_count }}</div>
+            </div>
+            <div class="kpi-box">
+                <div class="kpi-title">Pharmacies</div>
+                <div class="kpi-value">{{ pharmacy_count }}</div>
+            </div>
+        </div>
+
+        <!-- ✅ Toggle Switch -->
+        <div class="toggle-container">
+            <span>Point Map</span>
+            <label class="switch">
+                <input type="checkbox" id="mapToggle" onchange="toggleMap()">
+                <span class="slider round"></span>
+            </label>
+            <span>Polygon Map</span>
+        </div>
+
+        <!-- Map Section -->
+        <div class="map-wrapper">
+            <iframe id="mapFrame" src="/map" width="800" height="400" frameborder="0"></iframe>
+        </div>
+
+        <!-- Buttons -->
+        <div class="button-container" id="filterButtons">
             <button class="btn" onclick="refreshMap()">Refresh Map</button>
             <button class="btn" onclick="showClinicsOnly()">Show Clinics Only</button>
+            <button class="btn" onclick="showPharmaciesOnly()">Show Pharmacies Only</button>
         </div>
-        
+
+        <!-- Table -->
+        <h3>Health Facilities Table</h3>
+        <table id="facilityTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Amenity</th>
+                    <th>State</th>
+                    <th>Latitude</th>
+                    <th>Longitude</th>
+                </tr>
+            </thead>
+            <tbody id="facilityTableBody"></tbody>
+        </table>
+
+        <div id="pagination" class="pagination"></div>
+
+        <!-- Donut Chart -->
         <div class="chart-container">
             <h3>Amenity Distribution</h3>
-            <img src="data:image/png;base64,{{ chart_image }}" alt="Donut Chart">
+            <div id="donutChart"></div>
         </div>
     </div>
 
-    <script>
-        function refreshMap() {
-            document.getElementById("mapFrame").src = "/map?" + new Date().getTime();
-        }
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
-        function showClinicsOnly() {
-            document.getElementById("mapFrame").src = "/map/clinic?" + new Date().getTime();
-        }
-    </script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+    <!-- Plotly JSON Chart Data (Hidden) -->
+<script type="application/json" id="chart-data">
+    {{ chart_json | safe }}
+</script>
+
+<!-- Plotly Chart Renderer -->
+<script>
+    const chartData = JSON.parse(document.getElementById('chart-data').textContent);
+
+    // Force proper value and percent display
+    if (chartData.data && chartData.data[0]) {
+        chartData.data[0].textinfo = 'label+value+percent';
+        chartData.data[0].hovertemplate = '%{label}: %{value} (%{percent})<extra></extra>';
+    }
+
+    Plotly.newPlot('donutChart', chartData.data, chartData.layout, {responsive: true});
+</script>
+
+    
+        
+  
 </body>
 </html>
