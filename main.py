@@ -26,61 +26,67 @@ query = "SELECT name, amenity, addr_city, state, latitude, longitude FROM health
 with open("data/geoBoundaries-MYS-ADM1_simplified.geojson", "r", encoding="utf-8") as f:
     geojson = json.load(f)
 
-# === Kepler Config (Point Map) ===
 point_map_config = {
-    'version': 'v1',
-    'config': {
-        'mapState': {
-            'latitude': 3.944035,
-            'longitude': 102.638624,
-            'zoom': 4.70
+    "version": "v1",
+    "config": {
+        "mapState": {
+            "bearing": 0,
+            "dragRotate": False,
+            "latitude": 3.7042937118800836,
+            "longitude": 104.48420703124977,
+            "pitch": 0,
+            "zoom": 5,
+            "isSplit": False
         },
-        'visState': {
-            'layers': [{
-                'id': 'poi_layer',
-                'type': 'point',
-                'config': {
-                    'dataId': 'health_facilities',
-                    'label': 'Health Facilities',
-                    'color': [0, 197, 255],
-                    'columns': {
-                        'lat': 'latitude',
-                        'lng': 'longitude',
-                        'altitude': None
-                    },
-                    'isVisible': True,
-                    'visConfig': {
-                        'radius': 10,
-                        'opacity': 0.8,
-                        'filled': True,
-                        'colorRange': {
-                            'name': 'Custom Amenity Colors',
-                            'type': 'custom',
-                            'category': 'Custom',
-                            'colors': ['#28a745', '#007bff']
+        "visState": {
+            "layers": [
+                {
+                    "id": "pz4uzxg",
+                    "type": "point",
+                    "config": {
+                        "dataId": "health_facilities",  # 🔧 FIXED!
+                        "label": "point",
+                        "color": [248, 149, 112],
+                        "columns": {
+                            "lat": "latitude",
+                            "lng": "longitude"
                         },
-                        'radiusRange': [0, 50]
-                    },
-                    'colorField': {
-                        'name': 'amenity',
-                        'type': 'string'
-                    },
-                    'colorScale': 'ordinal'
+                        "isVisible": True,
+                        "visConfig": {
+                            "radius": 10,
+                            "opacity": 0.8,
+                            "filled": True,
+                            "colorRange": {
+                                "name": "Global Warming",
+                                "type": "sequential",
+                                "category": "Uber",
+                                "colors": [
+                                    "#4C0035", "#880030", "#B72F15",
+                                    "#D6610A", "#EF9100", "#FFC300"
+                                ]
+                            }
+                        }
+                    }
                 }
-            }]
-        },
-        'interactionConfig': {
-            'tooltip': {
-                'fieldsToShow': {
-                    'health_facilities': [
-                        'name', 'amenity', 'addr_city', 'state', 'latitude', 'longitude'
-                    ]
-                },
-                'enabled': True
+            ],
+            "interactionConfig": {
+                "tooltip": {
+                    "fieldsToShow": {
+                        "health_facilities": [ 
+                            {"name": "name"},
+                            {"name": "amenity"},
+                            {"name": "addr_city"},
+                            {"name": "latitude"},
+                            {"name": "longitude"}
+                        ]
+                    },
+                    "enabled": True
+                }
             }
         }
     }
 }
+
 
 
 # === Kepler Config (Polygon Map) ===
@@ -88,54 +94,47 @@ polygon_map_config = {
     'version': 'v1',
     'config': {
         'mapState': {
-            'latitude': 3.944035,
-            'longitude': 102.638624,
-            'zoom': 5
+            'latitude': 4.2105,
+            'longitude': 101.9758,
+            'zoom': 4.5
         },
         'visState': {
-            'layers': [
-                {
-                    'id': 'polygon_layer',
-                    'type': 'geojson',
-                    'config': {
-                        'dataId': 'Malaysia_States',
-                        'label': 'State Polygons',
-                        'color': [255, 153, 31],
-                        'isVisible': True,
-                        'visConfig': {
-                            'opacity': 0.5,
-                            'thickness': 1,
-                            'strokeOpacity': 0.8,
-                            'strokeColor': [255, 255, 255],
-                            'colorRange': {
-                                'name': 'ColorBrewer YlOrRd-6',
-                                'type': 'sequential',
-                                'category': 'ColorBrewer',
-                                'colors': [
-                                    '#ffffb2', '#fed976', '#feb24c',
-                                    '#fd8d3c', '#f03b20', '#bd0026'
-                                ]
-                            }
-                        }
+            'layers': [{
+                'id': 'polygon_layer',
+                'type': 'geojson',
+                'config': {
+                    'dataId': 'Malaysia_States',
+                    'label': 'State Polygon',
+                    'color': [255, 203, 153],
+                    'highlightColor': [252, 242, 26, 255],
+                    'columns': {
+                        'geojson': '_geojson'
+                    },
+                    'isVisible': True,
+                    'visConfig': {
+                        'opacity': 0.5,
+                        'thickness': 1,
+                        'colorRange': {
+                            'name': 'ColorBrewer YlOrRd-6',
+                            'type': 'sequential',
+                            'category': 'ColorBrewer',
+                            'colors': ['#ffffb2', '#fecc5c', '#fd8d3c', '#f03b20', '#bd0026']
+                        },
+                        'filled': True
                     }
                 }
-            ]
-        },
-        'interactionConfig': {
-            'tooltip': {
-                'fieldsToShow': {
-                    'Malaysia_States': [
-                        'shapeName',
-                        'clinic_count',
-                        'pharmacy_count'
-                    ]
-                },
-                'enabled': True
+            }],
+            'interactionConfig': {
+                'tooltip': {
+                    'fieldsToShow': {
+                        'Malaysia_States': ['shapeName', 'clinic_count', 'pharmacy_count']
+                    },
+                    'enabled': True
+                }
             }
         }
     }
 }
-
 
 
 
