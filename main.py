@@ -35,75 +35,9 @@ point_map_config = {
             'longitude': 102.638624,
             'zoom': 4.70
         },
-        'interactionConfig': {
-            'tooltip': {
-                'fieldsToShow': {
-                    'health_facilities': ['name', 'amenity', 'addr_city', 'state', 'latitude', 'longitude']
-                },
-                'enabled': True
-            }
-        }
-    }
-}
-
-# # === Kepler Config (Polygon Map) ===
-# polygon_map_config = {
-#     'version': 'v1',
-#     'config': {
-#         'mapState': {
-#             'latitude': 4.2105,
-#             'longitude': 101.9758,
-#             'zoom': 4.5
-#         },
-#         'visState': {
-#             'layers': [{
-#                 'id': 'polygon_layer',
-#                 'type': 'geojson',
-#                 'config': {
-#                     'dataId': 'Malaysia_States',
-#                     'label': 'State Polygon',
-#                     'color': [255, 203, 153],
-#                     'highlightColor': [252, 242, 26, 255],
-#                     'columns': {
-#                         'geojson': '_geojson'
-#                     },
-#                     'isVisible': True,
-#                     'visConfig': {
-#                         'opacity': 0.5,
-#                         'thickness': 1,
-#                         'colorRange': {
-#                             'name': 'ColorBrewer YlOrRd-6',
-#                             'type': 'sequential',
-#                             'category': 'ColorBrewer',
-#                             'colors': ['#ffffb2', '#fecc5c', '#fd8d3c', '#f03b20', '#bd0026']
-#                         },
-#                         'filled': True
-#                     }
-#                 }
-#             }],
-#             'interactionConfig': {
-#                 'tooltip': {
-#                     'fieldsToShow': {
-#                         'Malaysia_States': ['shapeName', 'clinic_count', 'pharmacy_count']
-#                     },
-#                     'enabled': True
-#                 }
-#             }
-#         }
-#     }
-# }
-
-point_map_config = {
-    'version': 'v1',
-    'config': {
-        'mapState': {
-            'latitude': 3.944035,
-            'longitude': 102.638624,
-            'zoom': 4.70
-        },
         'visState': {
             'layers': [{
-                'id': 'point_layer',
+                'id': 'poi_layer',
                 'type': 'point',
                 'config': {
                     'dataId': 'health_facilities',
@@ -123,7 +57,7 @@ point_map_config = {
                             'name': 'Custom Amenity Colors',
                             'type': 'custom',
                             'category': 'Custom',
-                            'colors': ['#28a745', '#007bff']  # clinic = green, pharmacy = blue
+                            'colors': ['#28a745', '#007bff']
                         },
                         'radiusRange': [0, 50]
                     },
@@ -138,13 +72,72 @@ point_map_config = {
         'interactionConfig': {
             'tooltip': {
                 'fieldsToShow': {
-                    'health_facilities': ['name', 'amenity', 'addr_city', 'state', 'latitude', 'longitude']
+                    'health_facilities': [
+                        'name', 'amenity', 'addr_city', 'state', 'latitude', 'longitude'
+                    ]
                 },
                 'enabled': True
             }
         }
     }
 }
+
+
+# === Kepler Config (Polygon Map) ===
+polygon_map_config = {
+    'version': 'v1',
+    'config': {
+        'mapState': {
+            'latitude': 3.944035,
+            'longitude': 102.638624,
+            'zoom': 5
+        },
+        'visState': {
+            'layers': [
+                {
+                    'id': 'polygon_layer',
+                    'type': 'geojson',
+                    'config': {
+                        'dataId': 'Malaysia_States',
+                        'label': 'State Polygons',
+                        'color': [255, 153, 31],
+                        'isVisible': True,
+                        'visConfig': {
+                            'opacity': 0.5,
+                            'thickness': 1,
+                            'strokeOpacity': 0.8,
+                            'strokeColor': [255, 255, 255],
+                            'colorRange': {
+                                'name': 'ColorBrewer YlOrRd-6',
+                                'type': 'sequential',
+                                'category': 'ColorBrewer',
+                                'colors': [
+                                    '#ffffb2', '#fed976', '#feb24c',
+                                    '#fd8d3c', '#f03b20', '#bd0026'
+                                ]
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        'interactionConfig': {
+            'tooltip': {
+                'fieldsToShow': {
+                    'Malaysia_States': [
+                        'shapeName',
+                        'clinic_count',
+                        'pharmacy_count'
+                    ]
+                },
+                'enabled': True
+            }
+        }
+    }
+}
+
+
+
 
 # === Donut Chart Generator ===
 def create_donut_chart_data(clinic_count, pharmacy_count):
@@ -198,13 +191,15 @@ def generate_point_map(df):
     df['Longitude'] = df['longitude']
 
     map_ = KeplerGl(height=400)
-    map_.add_data(data=df, name='health_facilities')
-    map_.config = point_map_config
+    map_.add_data(data=df, name='health_facilities')  # Add data first
+    map_.config = point_map_config                    # Then apply config
+
+    print(json.dumps(map_.config, indent=2))          # 👈 Export actual config from Kepler
 
     html_bytes = map_._repr_html_()
     html = html_bytes.decode('utf-8')
-
     return Response(html.encode('utf-8'), mimetype='text/html')
+
 
 
 # === Polygon Map Generator ===
@@ -217,8 +212,8 @@ def generate_polygon_map():
 
     # Merge with geojson properties
     for feature in geojson['features']:
-        state_name = feature['properties']['shapeName']
-        match = counts[counts['state'].str.lower() == state_name.lower()]
+        state_name = feature['properties'].get('shapeName', '').lower()
+        match = counts[counts['state'].str.lower() == state_name]
         if not match.empty:
             feature['properties']['clinic_count'] = int(match['clinic_count'].values[0])
             feature['properties']['pharmacy_count'] = int(match['pharmacy_count'].values[0])
@@ -226,15 +221,24 @@ def generate_polygon_map():
             feature['properties']['clinic_count'] = 0
             feature['properties']['pharmacy_count'] = 0
 
-    # Create map
+    # ✅ Debug print
+    print("Debug GeoJSON Properties:", geojson['features'][0]['properties'])
+
+    # ✅ Create map with proper ordering
     map_ = KeplerGl(height=400)
-    map_.add_data(data=geojson, name='Malaysia_States')
-    map_.config = polygon_map_config
+    map_.add_data(data=geojson, name='Malaysia_States')  # IMPORTANT: data name must match config
+    map_.config = polygon_map_config  # Apply config after data is added
+
+    # ✅ Export actual config back from Kepler if needed
+    print(json.dumps(map_.config, indent=2))
+
 
     html_bytes = map_._repr_html_()
     html = html_bytes.decode('utf-8')
 
     return Response(html.encode('utf-8'), mimetype='text/html')
+
+
 
 # === Map routes ===
 @app.route('/map')
