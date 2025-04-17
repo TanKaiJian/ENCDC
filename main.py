@@ -46,48 +46,101 @@ point_map_config = {
     }
 }
 
-# === Kepler Config (Polygon Map) ===
-polygon_map_config = {
+# # === Kepler Config (Polygon Map) ===
+# polygon_map_config = {
+#     'version': 'v1',
+#     'config': {
+#         'mapState': {
+#             'latitude': 4.2105,
+#             'longitude': 101.9758,
+#             'zoom': 4.5
+#         },
+#         'visState': {
+#             'layers': [{
+#                 'id': 'polygon_layer',
+#                 'type': 'geojson',
+#                 'config': {
+#                     'dataId': 'Malaysia_States',
+#                     'label': 'State Polygon',
+#                     'color': [255, 203, 153],
+#                     'highlightColor': [252, 242, 26, 255],
+#                     'columns': {
+#                         'geojson': '_geojson'
+#                     },
+#                     'isVisible': True,
+#                     'visConfig': {
+#                         'opacity': 0.5,
+#                         'thickness': 1,
+#                         'colorRange': {
+#                             'name': 'ColorBrewer YlOrRd-6',
+#                             'type': 'sequential',
+#                             'category': 'ColorBrewer',
+#                             'colors': ['#ffffb2', '#fecc5c', '#fd8d3c', '#f03b20', '#bd0026']
+#                         },
+#                         'filled': True
+#                     }
+#                 }
+#             }],
+#             'interactionConfig': {
+#                 'tooltip': {
+#                     'fieldsToShow': {
+#                         'Malaysia_States': ['shapeName', 'clinic_count', 'pharmacy_count']
+#                     },
+#                     'enabled': True
+#                 }
+#             }
+#         }
+#     }
+# }
+
+point_map_config = {
     'version': 'v1',
     'config': {
         'mapState': {
-            'latitude': 4.2105,
-            'longitude': 101.9758,
-            'zoom': 4.5
+            'latitude': 3.944035,
+            'longitude': 102.638624,
+            'zoom': 4.70
         },
         'visState': {
             'layers': [{
-                'id': 'polygon_layer',
-                'type': 'geojson',
+                'id': 'point_layer',
+                'type': 'point',
                 'config': {
-                    'dataId': 'Malaysia_States',
-                    'label': 'State Polygon',
-                    'color': [255, 203, 153],
-                    'highlightColor': [252, 242, 26, 255],
+                    'dataId': 'health_facilities',
+                    'label': 'Health Facilities',
+                    'color': [0, 197, 255],
                     'columns': {
-                        'geojson': '_geojson'
+                        'lat': 'latitude',
+                        'lng': 'longitude',
+                        'altitude': None
                     },
                     'isVisible': True,
                     'visConfig': {
-                        'opacity': 0.5,
-                        'thickness': 1,
+                        'radius': 10,
+                        'opacity': 0.8,
+                        'filled': True,
                         'colorRange': {
-                            'name': 'ColorBrewer YlOrRd-6',
-                            'type': 'sequential',
-                            'category': 'ColorBrewer',
-                            'colors': ['#ffffb2', '#fecc5c', '#fd8d3c', '#f03b20', '#bd0026']
+                            'name': 'Custom Amenity Colors',
+                            'type': 'custom',
+                            'category': 'Custom',
+                            'colors': ['#28a745', '#007bff']  # clinic = green, pharmacy = blue
                         },
-                        'filled': True
-                    }
-                }
-            }],
-            'interactionConfig': {
-                'tooltip': {
-                    'fieldsToShow': {
-                        'Malaysia_States': ['shapeName', 'clinic_count', 'pharmacy_count']
+                        'radiusRange': [0, 50]
                     },
-                    'enabled': True
+                    'colorField': {
+                        'name': 'amenity',
+                        'type': 'string'
+                    },
+                    'colorScale': 'ordinal'
                 }
+            }]
+        },
+        'interactionConfig': {
+            'tooltip': {
+                'fieldsToShow': {
+                    'health_facilities': ['name', 'amenity', 'addr_city', 'state', 'latitude', 'longitude']
+                },
+                'enabled': True
             }
         }
     }
@@ -140,6 +193,7 @@ def index():
 
 # === Point Map Generator ===
 def generate_point_map(df):
+    df['amenity'] = df['amenity'].str.lower()
     df['Latitude'] = df['latitude']
     df['Longitude'] = df['longitude']
 
@@ -151,6 +205,7 @@ def generate_point_map(df):
     html = html_bytes.decode('utf-8')
 
     return Response(html.encode('utf-8'), mimetype='text/html')
+
 
 # === Polygon Map Generator ===
 def generate_polygon_map():
